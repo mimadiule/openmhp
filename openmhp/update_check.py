@@ -85,11 +85,12 @@ def refresh_in_background() -> None:
         threading.Thread(target=refresh, name="mhp-update-check", daemon=True).start()
 
 
-def latest_known(*others: str | None) -> str:
-    """The newest release this process knows of: its own version, the cached PyPI answer, and any others
-    (a gateway passes on what it knows, so a lab PC with no internet still learns of a release)."""
-    known = [v for v in (__version__, read_cache().get("latest"), *others) if parse(v or "")]
-    return max(known, key=parse)
+def latest_known(*others: str | None) -> str | None:
+    """The newest release this process knows of: the cached PyPI answer and any others
+    (a gateway passes on what it knows, so a lab PC with no internet still learns of a release).
+    None when nothing is known: this install runs a local-version build and has no cached answer."""
+    known = [v for v in (read_cache().get("latest"), *others) if parse(v or "")]
+    return max(known, key=parse) if known else None
 
 
 def watch(on_newer, every_s: float = 3600, stop: threading.Event | None = None) -> threading.Event:
